@@ -1,0 +1,385 @@
+/* Import Google Fonts - MUST be first */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* BrainCode 360 — Modern Dark Luxury Design System */
+
+@layer base {
+    body {
+        @apply font-sans bg-navy text-gray-4 antialiased overflow-x-hidden min-h-screen selection:bg-purple-light selection:text-white relative;
+    }
+    
+    /* Background Ambient Animation */
+    body::before {
+        content: '';
+        @apply fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-glow/10 rounded-full blur-[120px] mix-blend-screen pointer-events-none z-[-1] animate-blob;
+    }
+
+    body::after {
+        content: '';
+        @apply fixed bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-navy-3/80 rounded-full blur-[100px] pointer-events-none z-[-1] animate-blob;
+        animation-delay: 2s;
+    }
+}
+
+@layer components {
+    /* ── SIDEBAR ───────────────────────────────────────────────── */
+    .sidebar {
+        @apply fixed top-0 left-0 w-[260px] h-screen bg-navy/80 backdrop-blur-2xl flex flex-col z-[100] border-r border-surface-border transition-all duration-300;
+    }
+
+    .sidebar-logo {
+        @apply py-8 px-8 pb-6 border-b border-surface-border;
+    }
+
+    .sidebar-logo-text {
+        @apply font-display text-2xl font-extrabold text-white tracking-tight flex items-baseline gap-1;
+    }
+
+    .sidebar-logo-text span {
+        @apply text-purple bg-clip-text text-transparent bg-gradient-to-r from-purple to-purple-glow drop-shadow-[0_0_15px_rgba(124,110,250,0.5)];
+    }
+
+    .sidebar-logo-sub {
+        @apply text-[10px] text-gray-3 tracking-[2px] uppercase mt-1 font-semibold;
+    }
+
+    .sidebar-nav {
+        @apply flex-1 py-6 overflow-y-auto w-full px-4;
+    }
+
+    .sidebar-nav-section {
+        @apply text-[10px] font-bold text-gray-4 tracking-[1.5px] uppercase px-4 pt-5 pb-2;
+    }
+
+    .sidebar-nav-item {
+        @apply flex items-center gap-3.5 px-4 py-3 mb-1 rounded-xl text-[14px] font-medium text-gray-3 transition-all duration-300 relative cursor-pointer w-full text-left bg-transparent border border-transparent overflow-hidden;
+    }
+    
+    .sidebar-nav-item:hover {
+        @apply text-white bg-surface-elevated translate-x-1;
+    }
+
+    .sidebar-nav-item.active {
+        @apply text-white bg-gradient-to-r from-purple/15 to-transparent border-surface-border border-l-2 border-l-purple shadow-[inset_0_0_20px_rgba(124,110,250,0.05)];
+    }
+
+    .sidebar-nav-icon {
+        @apply w-[20px] h-[20px] opacity-70 flex-shrink-0 transition-opacity duration-300;
+    }
+
+    .sidebar-nav-item.active .sidebar-nav-icon, 
+    .sidebar-nav-item:hover .sidebar-nav-icon {
+        @apply opacity-100 text-purple-glow;
+    }
+
+    .sidebar-nav-badge {
+        @apply ml-auto bg-purple text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-[0_0_10px_rgba(124,110,250,0.4)];
+    }
+
+    .sidebar-footer {
+        @apply mx-4 my-6 p-4 rounded-xl border border-surface-border bg-surface-elevated/50 backdrop-blur-md transition-all duration-300 hover:border-purple/30 hover:bg-surface-elevated;
+    }
+
+    /* ── MAIN CONTENT ──────────────────────────────────────────── */
+    .main-content {
+        @apply ml-[260px] min-h-screen flex flex-col relative z-10;
+    }
+
+    .topbar {
+        @apply bg-navy/60 backdrop-blur-xl px-10 h-[84px] flex items-center justify-between border-b border-surface-border sticky top-0 z-50 transition-all duration-300;
+    }
+
+    .page-title {
+        @apply font-display text-2xl font-bold text-white tracking-tight;
+    }
+
+    .content-area {
+        @apply p-10 flex-1 animate-fade-in-up;
+    }
+
+    /* ── BUTTONS ───────────────────────────────────────────────── */
+    .btn {
+        @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-sans text-[14px] font-bold cursor-pointer transition-all duration-300 relative overflow-hidden;
+    }
+
+    .btn-primary {
+        @apply bg-purple text-white border border-purple-glow/30 shadow-[0_0_15px_rgba(124,110,250,0.2)] 
+               hover:bg-purple-glow hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(124,110,250,0.4)] hover:border-white/20;
+    }
+
+    .btn-ghost {
+        @apply bg-surface text-gray-3 border border-surface-border 
+               hover:border-purple/50 hover:bg-surface-elevated hover:text-white hover:-translate-y-0.5 shadow-sm;
+    }
+    
+    .btn-danger {
+        @apply bg-red-light/20 text-red border border-red/20 hover:bg-red hover:text-white hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(242,92,92,0.4)];
+    }
+
+    /* ── CARDS ─────────────────────────────────────────────────── */
+    .stat-card {
+        @apply bg-surface backdrop-blur-xl rounded-[20px] p-6 border border-surface-border relative overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.3)] hover:border-purple/30;
+    }
+
+    .stat-card::after {
+        @apply content-[''] absolute top-[-50%] right-[-10%] w-32 h-32 rounded-full blur-[40px] opacity-20 pointer-events-none transition-opacity duration-300;
+    }
+    .stat-card:hover::after {
+        @apply opacity-40;
+    }
+
+    .stat-card.purple::after { @apply bg-purple-glow; }
+    .stat-card.green::after { @apply bg-green; }
+    .stat-card.amber::after { @apply bg-amber; }
+    .stat-card.red::after { @apply bg-red; }
+
+    .stat-label {
+        @apply text-[12px] font-semibold text-gray-4 uppercase tracking-wider mb-3;
+    }
+
+    .stat-value {
+        @apply font-display text-[36px] font-extrabold text-white leading-none;
+    }
+
+    .stat-badge {
+        @apply inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full mt-3 uppercase tracking-wide;
+    }
+
+    .stat-badge.up {
+        @apply bg-green-light border border-green/20 text-green shadow-[0_0_10px_rgba(34,211,160,0.1)];
+    }
+
+    .stat-badge.down {
+        @apply bg-red-light border border-red/20 text-red shadow-[0_0_10px_rgba(242,92,92,0.1)];
+    }
+
+    .card {
+        @apply bg-surface backdrop-blur-xl rounded-[20px] border border-surface-border overflow-hidden transition-all duration-300 hover:border-white/10 hover:shadow-[0_10px_40px_rgba(0,0,0,0.2)];
+    }
+
+    .card-header {
+        @apply px-7 py-5 border-b border-surface-border flex items-center justify-between bg-surface-elevated/30;
+    }
+
+    .card-title {
+        @apply font-display text-base font-bold text-white;
+    }
+
+    .card-body {
+        @apply p-7;
+    }
+
+    /* ── TABLE ─────────────────────────────────────────────────── */
+    .bc-table {
+        @apply w-full border-collapse;
+    }
+
+    .bc-table th {
+        @apply text-[11px] font-bold text-gray-4 uppercase tracking-widest px-5 py-3.5 text-left bg-surface-elevated/20 border-b border-surface-border backdrop-blur-sm;
+    }
+
+    .bc-table td {
+        @apply px-5 py-4 text-[14px] border-b border-surface-border text-gray-3 transition-colors duration-200;
+    }
+
+    .bc-table tr:last-child td {
+        @apply border-b-0;
+    }
+
+    .bc-table tr:hover td {
+        @apply bg-surface-elevated/40 text-white cursor-pointer;
+    }
+
+    /* ── STATUS BADGES ─────────────────────────────────────────── */
+    .status-badge {
+        @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-wider border;
+    }
+
+    .status-badge::before {
+        @apply content-[''] w-1.5 h-1.5 rounded-full shadow-sm;
+    }
+
+    .status-badge.pending {
+        @apply bg-amber-light border-amber/20 text-amber;
+    }
+
+    .status-badge.pending::before {
+        @apply bg-amber shadow-amber/50;
+    }
+
+    .status-badge.progress {
+        @apply bg-purple-light border-purple/20 text-purple-2;
+    }
+
+    .status-badge.progress::before {
+        @apply bg-purple-glow animate-pulse shadow-purple/50;
+    }
+
+    .status-badge.submitted {
+        @apply bg-green-light border-green/20 text-green;
+    }
+
+    .status-badge.submitted::before {
+        @apply bg-green shadow-green/50;
+    }
+
+    .status-badge.reviewed {
+        @apply bg-surface-elevated border-surface-border text-gray-4;
+    }
+
+    .status-badge.reviewed::before {
+        @apply bg-gray-4;
+    }
+
+    /* ── ROLE TAGS ─────────────────────────────────────────────── */
+    .role-tag {
+        @apply px-2.5 py-1 rounded-md text-[11px] font-bold font-mono border backdrop-blur-sm;
+    }
+
+    .role-tag.junior {
+        @apply bg-green-light/50 border-green/20 text-green shadow-[0_0_10px_rgba(34,211,160,0.05)];
+    }
+
+    .role-tag.mid {
+        @apply bg-purple-light/50 border-purple/20 text-purple-2 shadow-[0_0_10px_rgba(124,110,250,0.05)];
+    }
+
+    .role-tag.senior {
+        @apply bg-amber-light/50 border-amber/20 text-amber shadow-[0_0_10px_rgba(245,166,35,0.05)];
+    }
+
+    /* ── CHART BARS ────────────────────────────────────────────── */
+    .chart-bar-wrap {
+        @apply flex flex-col gap-4;
+    }
+
+    .chart-bar-item {
+        @apply flex flex-col gap-2;
+    }
+
+    .chart-bar-label {
+        @apply flex justify-between text-[13px];
+    }
+
+    .chart-bar-label span:first-child {
+        @apply text-gray-4 font-semibold;
+    }
+
+    .chart-bar-label span:last-child {
+        @apply font-bold text-white;
+    }
+
+    .chart-bar-track {
+        @apply h-2.5 bg-surface-elevated rounded-full overflow-hidden shadow-inner border border-surface-border/50;
+    }
+
+    .chart-bar-fill {
+        @apply h-full rounded-full transition-all duration-1000 ease-out;
+    }
+
+    /* ── ACTIVITY FEED ─────────────────────────────────────────── */
+    .feed-item {
+        @apply flex gap-4 py-4 border-b border-surface-border items-start transition-colors duration-200 hover:bg-surface-elevated/20 px-2 rounded-lg;
+    }
+
+    .feed-item:last-child {
+        @apply border-b-0;
+    }
+
+    .feed-dot {
+        @apply w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 text-base shadow-[0_5px_15px_-3px_rgba(0,0,0,0.2)] border border-white/5;
+    }
+
+    .feed-dot.green { @apply bg-green-light text-green; }
+    .feed-dot.purple { @apply bg-purple-light text-purple-2; }
+    .feed-dot.amber { @apply bg-amber-light text-amber; }
+    .feed-dot.red { @apply bg-red-light text-red; }
+
+    .feed-title {
+        @apply text-[14px] font-bold text-white;
+    }
+
+    .feed-sub {
+        @apply text-[13px] text-gray-4 mt-1 leading-relaxed;
+    }
+
+    .feed-time {
+        @apply text-[11px] font-medium text-gray-4 ml-auto flex-shrink-0 bg-surface px-2 py-1 rounded-md border border-surface-border;
+    }
+
+    /* ── PLAN BAR ──────────────────────────────────────────────── */
+    .plan-bar {
+        @apply relative bg-gradient-to-br from-navy-2 to-navy-3 rounded-2xl p-6 flex flex-col gap-4 mb-6 border border-purple/30 overflow-hidden shadow-[0_10px_30px_rgba(124,110,250,0.1)];
+    }
+    
+    .plan-bar::before {
+        content: '';
+        @apply absolute inset-0 bg-gradient-to-r from-purple/10 via-purple-glow/10 to-transparent pointer-events-none;
+    }
+
+    .plan-name {
+        @apply font-display text-lg font-bold text-white tracking-wide;
+    }
+
+    .plan-detail {
+        @apply text-xs flex justify-between items-end text-purple-2 mt-1 font-medium;
+    }
+
+    .usage-track {
+        @apply w-full h-2 bg-dark/50 rounded-full overflow-hidden border border-white/5 shadow-inner;
+    }
+
+    .usage-fill {
+        @apply h-full bg-gradient-to-r from-purple to-purple-glow rounded-full shadow-[0_0_10px_rgba(124,110,250,0.8)] relative;
+    }
+
+    /* ── USER AVATAR ───────────────────────────────────────────── */
+    .user-avatar {
+        @apply w-9 h-9 rounded-full bg-gradient-to-br from-purple to-purple-glow flex items-center justify-center font-display text-sm font-bold text-white flex-shrink-0 shadow-[0_0_15px_rgba(124,110,250,0.4)] border border-white/20;
+    }
+
+    .user-plan-badge {
+        @apply text-[10px] text-purple-glow bg-purple-light/50 border border-purple/20 px-2 py-0.5 rounded-full inline-block font-bold mt-1 tracking-wider uppercase;
+    }
+
+    /* ── FORM ELEMENTS ─────────────────────────────────────────── */
+    .form-label {
+        @apply text-[13px] font-bold text-gray-4 mb-2 block tracking-wide;
+    }
+
+    .form-input, .form-select, .form-textarea {
+        @apply w-full px-4 py-3 rounded-xl border border-surface-border font-sans text-[14px] text-white bg-surface outline-none transition-all duration-300 shadow-inner placeholder:text-gray-4/50 focus:border-purple focus:ring-2 focus:ring-purple/20 focus:bg-surface-elevated;
+    }
+
+    .form-textarea {
+        @apply resize-y min-h-[120px] leading-relaxed;
+    }
+    
+    /* Vue Transitions */
+    .page-enter-active,
+    .page-leave-active {
+        transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .page-enter-from,
+    .page-leave-to {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+
+    /* ── SCROLLBAR ─────────────────────────────────────────────── */
+    ::-webkit-scrollbar {
+        @apply w-2 h-2;
+    }
+
+    ::-webkit-scrollbar-track {
+        @apply bg-dark/50;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        @apply bg-surface-elevated rounded-full hover:bg-purple/50 border-2 border-solid border-dark/50;
+    }
+}

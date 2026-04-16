@@ -1,0 +1,29 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\Company;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+/**
+ * @extends Factory<Company>
+ */
+class CompanyFactory extends Factory
+{
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+            'name' => fake()->company(),
+            'email' => fake()->companyEmail(),
+            'plan' => fake()->randomElement(['free', 'starter', 'pro', 'enterprise']),
+            'plan_expires_at' => now()->addMonth(),
+            'total_assessments' => 0,
+            'logo' => null,
+        ];
+    }
+}

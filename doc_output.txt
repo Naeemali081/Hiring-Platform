@@ -1,0 +1,877 @@
+BRAINCODE 360
+Project Documentation
+v1.0 — Complete Technical & Product Specification
+
+Skill-First Hiring Platform Built for the AI Era
+Confidential — Internal Development Use Only
+
+1. Project Overview
+BrainCode 360 is a skill-first technical hiring platform designed for the AI era. It replaces outdated interview methods — definitions, LeetCode puzzles, memory tests — with real-world coding assessments, AI-transparent reporting, and a single defend round.
+1.1 Problem Statement
+The current hiring process in 2026 is fundamentally broken:
+Companies hire based on memorization, not real ability
+4-5 interview rounds waste time for both sides
+AI bans are unrealistic — developers use AI on the job daily
+Poor hires cost companies 6+ months before they realize the mistake
+Existing platforms (HackerRank, Codility) still use LeetCode-style puzzles
+
+1.2 Solution
+BrainCode 360 provides:
+Real-world coding problems — custom or from curated library
+Role-based difficulty — Junior / Mid / Senior auto-sorting
+AI-allowed environment — but every keystroke is tracked
+Copy-paste vs manual code transparency report
+One defend round — candidate explains their approach live
+Time limits suggested by AI based on problem complexity + role
+
+1.3 Target Users
+User Type
+Who They Are
+What They Do on Platform
+Company Admin
+HR or CTO of hiring company
+Creates assessments, manages candidates, views reports
+Interviewer
+Tech lead or developer at company
+Conducts defend round, reviews submissions
+Candidate
+Developer applying for a job
+Receives link, solves problem, submits code
+Super Admin
+BrainCode 360 team
+Manages platform, problem library, billing
+
+2. Technology Stack
+2.1 Backend
+Technology
+Purpose
+Laravel 11
+Main backend framework — API + Inertia hybrid
+PHP 8.3
+Server language
+MySQL 8.0
+Primary database
+Laravel Reverb
+WebSockets — real-time timer sync & tracking
+Laravel Horizon
+Queue management — async code execution
+Laravel Sanctum
+API authentication for candidate portal
+Judge0 API
+Sandboxed code execution engine
+Spatie Permissions
+Role-based access control (RBAC)
+
+2.2 Frontend
+Vue 3 + Inertia.js
+Company Dashboard & Admin Panel
+Vue 3 SPA (standalone)
+Candidate Portal — Monaco + Timer + Tracking
+Monaco Editor
+VS Code engine — in-browser code editor
+Tailwind CSS
+Utility-first styling
+Pinia
+State management for candidate portal
+Axios
+HTTP client
+
+2.3 Infrastructure
+Railway / DigitalOcean
+App server hosting
+MySQL (hosted)
+Database server
+Redis
+Cache + queue driver
+AWS S3 / Cloudflare R2
+Code submission storage
+Resend / Mailgun
+Transactional email — candidate links
+Cloudflare
+DNS + DDoS protection
+
+2.4 Development Tools
+Cursor IDE
+AI-powered development
+GitHub
+Version control
+Laravel Pint
+Code formatting
+Pest PHP
+Testing framework
+Postman
+API testing
+
+3. System Architecture
+3.1 High-Level Architecture
+The system is split into three main layers:
+Company Dashboard — Inertia + Vue (served by Laravel)
+Candidate Portal — Standalone Vue SPA (separate build, same Laravel API)
+Laravel Backend — Handles both, plus Judge0 integration and WebSockets
+
+3.2 Architecture Diagram (Text)
+[ Company Dashboard ]  ─────►  [ Laravel App (Inertia) ]
+                                        │
+                               [ MySQL Database ]
+                               [ Redis Cache/Queue ]
+                                        │
+[ Candidate Portal  ]  ─────►  [ Laravel API (Sanctum) ]
+  (Standalone Vue SPA)                  │
+                               [ Judge0 API ]  ──►  [ Code Execution ]
+                               [ Laravel Reverb ]  ──►  [ WebSockets ]
+                               [ S3/R2 ]  ──►  [ Submission Storage ]
+
+3.3 Security Architecture
+Concern
+Risk
+Solution
+Timer manipulation
+Candidate extends time via DevTools
+Timer lives server-side only — frontend is display only
+Problem leak
+Candidate shares link with others
+Unique one-time token per candidate — expires after use
+Code execution
+Malicious code runs on server
+Judge0 sandboxed environment — never runs on main server
+Copy-paste bypass
+Second device used
+Defend round exposes this — candidate cannot explain unfamiliar code
+Tab switching
+Googling answers mid-test
+Tab visibility API tracks focus loss — logged in report
+Data privacy
+Candidate code exposed
+Submissions encrypted at rest in S3 — only company can access
+
+4. Database Schema
+4.1 Core Tables
+users
+Column
+Type
+Nullable
+Description
+id
+bigint PK
+No
+Auto increment
+name
+varchar(255)
+No
+Full name
+email
+varchar(255)
+No
+Unique email
+password
+varchar(255)
+No
+Hashed
+role
+enum
+No
+super_admin, company_admin, interviewer, candidate
+company_id
+bigint FK
+Yes
+Null for candidates/super admin
+email_verified_at
+timestamp
+Yes
+Email verification
+created_at
+timestamp
+No
+Auto
+
+companies
+id
+bigint PK — auto increment
+name
+varchar(255) — company name
+email
+varchar(255) — company email
+plan
+enum: free, starter, pro, enterprise
+plan_expires_at
+timestamp nullable — subscription expiry
+total_assessments
+int — count of assessments created
+logo
+varchar nullable — S3 path
+created_at
+timestamp
+
+problems
+id
+bigint PK
+company_id
+bigint FK nullable — null = platform library problem
+title
+varchar(255)
+description
+longtext — full problem statement
+difficulty
+enum: easy, medium, hard
+role_level
+enum: junior, mid, senior
+suggested_time_minutes
+int — AI suggested time
+tags
+json — e.g. ["Laravel", "Vue", "API"]
+is_public
+boolean — platform library or company private
+created_by
+bigint FK → users.id
+created_at
+timestamp
+
+assessments
+id
+bigint PK
+company_id
+bigint FK
+problem_id
+bigint FK
+candidate_name
+varchar(255)
+candidate_email
+varchar(255)
+role_level
+enum: junior, mid, senior
+token
+varchar(64) unique — one-time access token
+time_limit_minutes
+int — final time limit set by company
+status
+enum: pending, in_progress, submitted, reviewed
+started_at
+timestamp nullable
+submitted_at
+timestamp nullable
+expires_at
+timestamp — token expiry
+defend_scheduled_at
+timestamp nullable
+created_at
+timestamp
+
+submissions
+id
+bigint PK
+assessment_id
+bigint FK
+code
+longtext — final submitted code
+language
+varchar(50) — e.g. php, javascript, python
+execution_result
+json nullable — Judge0 response
+manual_chars
+int — characters typed manually
+pasted_chars
+int — characters pasted
+paste_events
+int — number of paste actions
+tab_switches
+int — times candidate left tab
+keystrokes_log
+json — full typing activity log (S3 path)
+score
+int nullable — company assigned score after review
+reviewer_notes
+text nullable
+created_at
+timestamp
+
+5. Feature Specifications
+5.1 Authentication & Roles
+Two separate auth flows:
+Company users — Laravel + Inertia session auth (web guard)
+Candidates — Token-based access via unique URL (no account needed)
+
+Role permissions matrix:
+Permission
+Super Admin
+Company Admin
+Interviewer
+Candidate
+Manage platform problem library
+✅
+❌
+❌
+❌
+Manage companies & billing
+✅
+❌
+❌
+❌
+Create/edit assessments
+✅
+✅
+❌
+❌
+Add custom problems
+✅
+✅
+❌
+❌
+View all company reports
+✅
+✅
+❌
+❌
+Conduct defend round
+✅
+✅
+✅
+❌
+View assigned assessment reports
+❌
+✅
+✅
+❌
+Solve assessment
+❌
+❌
+❌
+✅
+
+5.2 Company Dashboard Features
+5.2.1 Problem Management
+View platform curated problem library (filtered by role level + tags)
+Create custom private problems with rich text editor
+Problems have: title, description, difficulty, role_level, tags, time suggestion
+AI suggests time limit when problem is created (Anthropic API call)
+Company can override suggested time
+Problems can be marked as active/archived
+
+5.2.2 Assessment Creation Flow
+Step 1 — Select Role Level
+Junior / Mid-level / Senior dropdown
+This filters problem library automatically
+Step 2 — Select Problem
+Browse filtered library or pick custom problem
+Preview problem statement before selecting
+Step 3 — Set Candidate Details
+Candidate name + email
+Optional: custom message to include in email
+Step 4 — Review & Send
+Review: role, problem, time limit, candidate details
+System generates unique token
+Email sent to candidate with assessment link
+Assessment status: pending
+
+5.2.3 Assessment Management
+Dashboard showing all assessments with status filters
+Status: Pending | In Progress | Submitted | Reviewed
+View individual assessment details
+See real-time progress when candidate is in_progress
+Download submission report as PDF
+Schedule defend round — calendar link sent to candidate
+Mark assessment as reviewed with score + notes
+
+5.2.4 Reports & Analytics
+Per-submission report: manual vs copy-paste breakdown (chart)
+Tab switch count + timestamps
+Time taken vs time limit
+Code execution result (pass/fail if test cases provided)
+Company-level analytics: average scores, role distribution, pass rate
+Exportable as PDF
+
+5.3 Candidate Portal Features
+5.3.1 Assessment Entry
+Candidate opens unique URL — no login required
+Token validated server-side — if expired or used, access denied
+Candidate sees: problem title, role level, time limit, instructions
+Must click "Start Assessment" to begin — timer starts server-side at this point
+Cannot restart once started
+
+5.3.2 Code Editor (Monaco)
+Monaco Editor — full VS Code experience in browser
+Syntax highlighting for: PHP, JavaScript, Python, Java, TypeScript, Go
+Auto-complete, bracket matching, error highlighting
+Language selector dropdown (candidate picks their language)
+Editor cannot be disabled or minimized
+Full-screen mode enforced on mobile
+
+5.3.3 Timer System
+Timer displayed prominently — counts down
+Timer state managed server-side (started_at + time_limit stored in DB)
+Frontend syncs with server every 30 seconds via WebSocket
+Warning shown at 10 minutes remaining
+Warning shown at 5 minutes remaining
+Auto-submit triggered when timer hits 0 — whatever is in editor is saved
+Candidate can manually submit before timer expires
+
+5.3.4 Activity Tracking
+All tracking is silent — no UI indication to candidate:
+Every paste event logged (timestamp + pasted content length)
+Manual keystroke count tracked via input events
+Tab visibility changes tracked (document.visibilityState)
+Full activity log streamed to server via WebSocket in real-time
+Even if candidate closes tab — partial log is already saved
+
+5.3.5 Code Submission
+Candidate clicks Submit or timer expires
+Confirmation dialog shown (cannot undo)
+Code saved to database + S3
+If test cases exist — Judge0 executes code, result saved
+Submission page shown: "Your assessment has been submitted successfully"
+Assessment token marked as used — cannot be reopened
+
+5.4 Defend Round
+Company schedules defend round from dashboard
+Calendar invite sent to candidate via email
+Platform generates auto-suggested questions based on submitted code
+Questions focus on: approach reasoning, alternative solutions, edge cases
+Interviewer marks outcome: Pass / Fail / Undecided
+Notes saved to submission record
+Optional: live coding micro-task — interviewer can paste a modification challenge
+
+5.5 Pricing & Subscription
+Feature
+Free
+Pro ($49/mo)
+Enterprise
+Assessments/month
+5
+100
+Unlimited
+Platform users
+1
+5
+Unlimited
+Custom problems
+❌
+✅
+✅
+Platform library access
+✅
+✅
+✅
+Transparency report
+Basic
+Full
+Full
+PDF export
+❌
+✅
+✅
+Defend scheduler
+❌
+✅
+✅
+Code execution
+❌
+✅
+✅
+Priority support
+❌
+❌
+✅
+White label
+❌
+❌
+✅
+API access
+❌
+❌
+✅
+
+6. API Endpoints
+6.1 Authentication
+Method
+Endpoint
+Auth
+Description
+POST
+/api/auth/login
+None
+Company user login
+POST
+/api/auth/logout
+Sanctum
+Logout
+POST
+/api/auth/register
+None
+Company registration
+GET
+/api/auth/me
+Sanctum
+Get current user
+
+6.2 Problems
+Method
+Endpoint
+Auth
+Description
+GET
+/api/problems
+Sanctum
+List problems (filtered by role)
+POST
+/api/problems
+Sanctum
+Create custom problem
+GET
+/api/problems/{id}
+Sanctum
+Get single problem
+PUT
+/api/problems/{id}
+Sanctum
+Update problem
+DELETE
+/api/problems/{id}
+Sanctum
+Delete problem
+GET
+/api/problems/library
+Sanctum
+Platform curated library
+
+6.3 Assessments
+Method
+Endpoint
+Auth
+Description
+GET
+/api/assessments
+Sanctum
+List company assessments
+POST
+/api/assessments
+Sanctum
+Create + send assessment
+GET
+/api/assessments/{id}
+Sanctum
+Get assessment details
+DELETE
+/api/assessments/{id}
+Sanctum
+Cancel assessment
+GET
+/api/assessments/{id}/report
+Sanctum
+Get full report
+POST
+/api/assessments/{id}/defend
+Sanctum
+Schedule defend round
+GET
+/api/candidate/{token}
+Token
+Candidate: get assessment
+POST
+/api/candidate/{token}/start
+Token
+Candidate: start timer
+POST
+/api/candidate/{token}/submit
+Token
+Candidate: submit code
+POST
+/api/candidate/{token}/activity
+Token
+Candidate: log activity
+
+7. User Flows
+7.1 Company — Create & Send Assessment
+Login → Dashboard → New Assessment
+  → Select Role Level (Junior/Mid/Senior)
+  → Browse Problems (filtered) OR Add Custom Problem
+  → Enter Candidate Name + Email
+  → Review time limit (AI suggested — can override)
+  → Click "Send Assessment"
+  → System: creates token, sends email, status = pending
+  → Company sees assessment in list with "Pending" badge
+
+7.2 Candidate — Complete Assessment
+Receives email with unique link
+  → Opens link → Sees problem + instructions + time limit
+  → Clicks "Start Assessment"
+  → Timer starts (server-side)
+  → Monaco editor opens with selected language
+  → Candidate writes code (all activity tracked silently)
+  → Submits manually OR auto-submit at time=0
+  → Sees confirmation page
+  → Token marked as used — cannot reopen
+
+7.3 Company — Review Submission
+Notification: "Assessment submitted by [Candidate Name]"
+  → Click to view report
+  → See: code, execution result, transparency chart
+  → Manual: X chars | Pasted: Y chars | Tab switches: Z
+  → Decide: Schedule Defend Round OR Reject
+  → If defend: click "Schedule" → calendar link sent to candidate
+  → After defend: mark Pass/Fail + notes
+  → Assessment marked as Reviewed
+
+7.4 Edge Cases & Handling
+Edge Case
+System Behavior
+Candidate closes browser mid-test
+Activity saved via WebSocket. Timer continues server-side. Can reopen same token before expiry.
+Timer expires before submission
+Auto-submit triggered. Whatever is in editor is saved as final submission.
+Candidate submits empty code
+Allowed. Report shows 0 chars. Company sees empty submission.
+Same token used twice
+After first submission, token is invalidated. Second access shows "Assessment already completed" page.
+Internet disconnects during test
+Activity log buffered locally. On reconnect, buffered events sent to server. Timer already running server-side.
+Company deletes assessment
+Soft delete — data retained for 90 days for compliance.
+Code execution timeout
+Judge0 returns timeout error. Saved in execution_result. Report shows "Execution timed out".
+
+8. Design System & Theme
+8.1 Brand Identity
+BrainCode 360 is a premium, serious platform. The visual language should communicate trust, intelligence, and modernity — not startup-playful. Think dark luxury with purple accents.
+8.2 Color Palette
+Name
+Hex
+Usage
+Where
+Primary Navy
+#1A1A2E
+Main background, headers
+Sidebar, navbar, page bg
+Accent Purple
+#6C63FF
+CTAs, highlights, links
+Buttons, badges, active states
+Light Purple
+#EDE9FF
+Subtle backgrounds
+Table row hover, card bg
+Success Green
+#10B981
+Positive states
+Submitted, pass, manual typing
+Warning Amber
+#F59E0B
+Caution states
+Pending, medium alerts
+Danger Red
+#EF4444
+Error states
+Failed, high paste ratio
+Gray Light
+#F3F4F6
+Page background
+Main content area
+Gray Mid
+#6B7280
+Secondary text
+Descriptions, timestamps
+White
+#FFFFFF
+Cards, inputs
+All card components
+
+8.3 Typography
+Primary Font
+Inter — all UI text, paragraphs, labels
+Heading Font
+Space Grotesk — page titles, section headers
+Code Font
+JetBrains Mono — Monaco editor, code snippets, reports
+H1 Size
+32px / 700 weight
+H2 Size
+24px / 600 weight
+H3 Size
+18px / 600 weight
+Body
+14px / 400 weight
+Small / Label
+12px / 500 weight
+
+8.4 Component Design Guidelines
+Buttons: rounded-lg (8px radius), primary = purple solid, secondary = outlined
+Cards: white bg, subtle shadow (0 1px 3px rgba(0,0,0,0.08)), rounded-xl
+Sidebar: dark navy (#1A1A2E) with white icons + text
+Status badges: colored pills — green/amber/red/gray based on status
+Tables: white cards, gray header row, alternating gray1 row shading
+Forms: clean inputs with purple focus ring, floating labels
+Charts: use purple + green + red for copy-paste transparency report
+
+8.5 Candidate Portal Specific
+Dark theme enforced — Monaco editor dark theme (VS Dark)
+Timer: large, top-right, red when under 10 minutes
+Problem statement: left panel, editor: right panel (split layout)
+Submit button: bottom-right, green, disabled until code is written
+Full screen encouraged — prompt shown on load
+
+9. Project Setup & Commands
+9.1 Prerequisites
+PHP 8.3+
+Composer 2.x
+Node.js 20+ and npm
+MySQL 8.0
+Redis
+Git
+
+9.2 Backend Setup (Laravel)
+Step 1 — Clone & Install
+git clone https://github.com/yourorg/braincode360.git
+cd braincode360
+composer install
+cp .env.example .env
+php artisan key:generate
+
+Step 2 — Configure .env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=braincode360
+DB_USERNAME=root
+DB_PASSWORD=your_password
+
+BROADCAST_DRIVER=reverb
+QUEUE_CONNECTION=redis
+CACHE_DRIVER=redis
+
+REVERB_APP_ID=your_reverb_app_id
+REVERB_APP_KEY=your_reverb_key
+REVERB_APP_SECRET=your_reverb_secret
+
+JUDGE0_API_URL=https://judge0-ce.p.rapidapi.com
+JUDGE0_API_KEY=your_judge0_key
+
+MAIL_MAILER=resend
+RESEND_API_KEY=your_resend_key
+MAIL_FROM_ADDRESS=noreply@braincode360.com
+
+AWS_ACCESS_KEY_ID=your_key
+AWS_SECRET_ACCESS_KEY=your_secret
+AWS_DEFAULT_REGION=us-east-1
+AWS_BUCKET=braincode360-submissions
+
+Step 3 — Database & Seed
+php artisan migrate
+php artisan db:seed
+# This seeds: super admin user, platform problem library
+
+Step 4 — Run Services
+# Terminal 1 — Laravel app
+php artisan serve
+
+# Terminal 2 — Queue worker (for email + code execution)
+php artisan queue:work
+
+# Terminal 3 — WebSocket server
+php artisan reverb:start
+
+# Terminal 4 — Frontend (Inertia)
+npm install && npm run dev
+
+9.3 Candidate Portal Setup (Standalone Vue SPA)
+cd candidate-portal
+npm install
+cp .env.example .env
+# Set VITE_API_URL=http://localhost:8000
+# Set VITE_REVERB_KEY=your_reverb_key
+npm run dev
+# Runs on http://localhost:5174
+
+9.4 Production Deployment
+# Build frontend assets
+npm run build
+
+# Production optimizations
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan storage:link
+
+# Run migrations on production
+php artisan migrate --force
+
+# Start Horizon (production queue manager)
+php artisan horizon
+
+9.5 Useful Artisan Commands
+Command
+Purpose
+php artisan make:model Problem -mfc
+Create Problem model + migration + factory + controller
+php artisan make:model Assessment -mfc
+Create Assessment model + migration + factory + controller
+php artisan make:model Submission -mfc
+Create Submission model + migration + factory + controller
+php artisan make:mail AssessmentInvite
+Create assessment email mailable
+php artisan make:event AssessmentStarted
+Create WebSocket broadcast event
+php artisan make:job ExecuteCode
+Create Judge0 execution queue job
+php artisan make:policy AssessmentPolicy
+Create authorization policy
+php artisan tinker
+Interactive Laravel shell for testing
+php artisan test
+Run all Pest tests
+php artisan horizon:status
+Check queue worker status
+
+10. Testing Checklist
+Use this checklist before every release to ensure nothing is missed.
+10.1 Authentication
+Company can register with valid details
+Company cannot register with duplicate email
+Company can log in with correct credentials
+Company cannot log in with wrong password
+Candidate can access assessment with valid token
+Candidate cannot access assessment with expired/invalid token
+Candidate cannot access assessment already submitted
+Role-based middleware blocks unauthorized access
+
+10.2 Assessment Creation
+Company can create assessment with platform problem
+Company can create assessment with custom problem
+Email sent to candidate on creation
+Unique token generated for each assessment
+Assessment appears in company dashboard with "Pending" status
+Time limit correctly saved from form
+
+10.3 Candidate Portal
+Assessment loads correctly with problem statement
+Timer starts on "Start Assessment" click
+Timer syncs with server — manipulating frontend does NOT change server timer
+Monaco editor loads with correct language
+Copy-paste events are tracked
+Manual keystroke count increases while typing
+Tab switch tracked when candidate leaves tab
+Warning shown at 10 minutes remaining
+Warning shown at 5 minutes remaining
+Auto-submit fires when timer reaches 0
+Manual submit works before timer expires
+After submit — token cannot be reused
+If internet disconnects and reconnects — activity log synced
+
+10.4 Reports
+Submission report shows correct manual vs paste breakdown
+Tab switch count is accurate
+Time taken correctly calculated
+Code execution result shown (if test cases exist)
+PDF export generates correctly
+Report only accessible to correct company
+
+10.5 Security
+Company A cannot see Company B assessments
+API routes return 401 without valid token
+Candidate token cannot be guessed (64-char random)
+SQL injection attempts handled by Eloquent
+Code execution runs in Judge0 sandbox — not on main server
+XSS attempts in code editor are sanitized before storage
+
+10.6 Subscription & Limits
+Free tier company blocked after 5 assessments/month
+Pro tier allows up to 100 assessments/month
+Upgrade prompt shown when limit reached
+Custom problems blocked on free tier
