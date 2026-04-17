@@ -19,6 +19,7 @@ Route::middleware(['auth', 'verified', 'company.user'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
     Route::get('/problems', [ProblemController::class, 'index'])->name('problems.index');
+    Route::post('/problems/suggest-time', [ProblemController::class, 'suggestTime'])->name('problems.suggestTime');
     Route::post('/problems', [ProblemController::class, 'store'])->name('problems.store');
 
     Route::get('/assessments', [AssessmentController::class, 'index'])->name('assessments.index');

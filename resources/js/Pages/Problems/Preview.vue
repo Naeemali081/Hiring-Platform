@@ -1,12 +1,29 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
+import hljs from 'highlight.js';
+import 'highlight.js/styles/github-dark.css';
+
+marked.setOptions({
+    highlight: function(code, lang) {
+        if (lang && hljs.getLanguage(lang)) {
+            return hljs.highlight(code, { language: lang }).value;
+        }
+        return hljs.highlightAuto(code).value;
+    }
+});
 
 const props = defineProps({
     problem: {
         type: Object,
         required: true,
     },
+});
+
+const renderedProblemDescription = computed(() => {
+    return DOMPurify.sanitize(marked.parse(props.problem.description || 'No description provided.'));
 });
 
 const code = ref(`namespace App\\Http\\Controllers\\Api;
@@ -107,7 +124,7 @@ const submitCode = () => {
                     <span class="time-chip">⏱ {{ problem.suggested_time_minutes }} min</span>
                 </div>
                 <div class="text-[13.5px] text-white/65 leading-[1.75]">
-                    <div class="mb-3" v-html="problem.description?.replace(/\n/g, '<br>') || 'No description provided.'"></div>
+                    <div class="mb-3 markdown-body" v-html="renderedProblemDescription"></div>
                     <p><strong class="text-white/80">Requirements:</strong></p>
                     <p>1. Implement the solution according to the problem statement.</p>
                     <p>2. Follow best practices for {{ problem.role_level }} level developers.</p>
